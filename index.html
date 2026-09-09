@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>RTL Coverflow Slider</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #fff;
+        color: #111;
+      }
+
+      /* ========================================
+         SECTION
+      ======================================== */
+
+      .success-section {
+        width: 100%;
+        padding: 70px 0 30px;
+        overflow: hidden;
+      }
+
+      .success-section__container {
+        width: min(1440px, 100%);
+        margin: 0 auto;
+
+        display: flex;
+        align-items: center;
+
+        /*
+          چون RTL است:
+          content سمت راست
+          slider سمت چپ
+        */
+        flex-direction: row;
+
+        gap: 50px;
+      }
+
+      /* ========================================
+         CONTENT
+      ======================================== */
+
+      .success-section__content {
+        /*
+          بخش متن فضای مشخص خودش را دارد
+          و اجازه نمی‌دهیم Slider وارد آن شود.
+        */
+        width: 32%;
+        flex: 0 0 32%;
+
+        text-align: right;
+
+        position: relative;
+        z-index: 100;
+
+        background: #fff;
+
+        padding-right: 20px;
+      }
+
+      .success-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 10px 18px;
+
+        border-radius: 999px;
+
+        background: #eaf2fc;
+        color: #0047ab;
+
+        font-size: 14px;
+        font-weight: 700;
+
+        margin-bottom: 25px;
+      }
+
+      .success-section__title {
+        margin: 0 0 18px;
+
+        font-size: clamp(32px, 3vw, 48px);
+        line-height: 1.35;
+
+        font-weight: 800;
+      }
+
+      .success-section__description {
+        margin: 0;
+
+        font-size: 20px;
+        line-height: 1.8;
+
+        color: #222;
+      }
+
+      /* ========================================
+         SLIDER CONTAINER
+      ======================================== */
+
+      .success-slider {
+        /*
+          فضای Slider کاملاً جدا از متن
+        */
+        width: 68%;
+        flex: 0 0 68%;
+
+        min-width: 0;
+
+        position: relative;
+
+        /*
+          خیلی مهم:
+          اجازه نمی‌دهیم کارت‌ها وارد متن شوند.
+        */
+        overflow: hidden;
+
+        z-index: 1;
+      }
+
+      .success-slider .swiper {
+        width: 100%;
+
+        /*
+          خود swiper اجازه می‌دهد
+          Coverflow بیرون از wrapper دیده شود.
+        */
+        overflow: visible;
+
+        padding: 15px 0 55px;
+      }
+
+      .success-slider .swiper-wrapper {
+        align-items: flex-start;
+      }
+
+      /* ========================================
+         SLIDE
+      ======================================== */
+
+      .success-slider .swiper-slide {
+        width: 292px;
+
+        position: relative;
+
+        z-index: 1;
+
+        /*
+          فقط Blur و opacity انیمیشن دارند.
+        */
+        transition:
+          filter 0.5s ease,
+          opacity 0.5s ease;
+      }
+
+      /* ========================================
+         CARD
+      ======================================== */
+
+      .success-card {
+        width: 100%;
+
+        background: #f5f5f5;
+
+        border-radius: 20px;
+
+        overflow: hidden;
+
+        box-shadow: none;
+
+        transition:
+          box-shadow 0.5s ease,
+          filter 0.5s ease,
+          opacity 0.5s ease;
+      }
+
+      /* ========================================
+         IMAGE
+      ======================================== */
+
+      .success-card__image {
+        width: 100%;
+        height: 205px;
+
+        overflow: hidden;
+
+        background: #eee;
+      }
+
+      .success-card__image img {
+        display: block;
+
+        width: 100%;
+        height: 100%;
+
+        object-fit: cover;
+      }
+
+      /* ========================================
+         BODY
+      ======================================== */
+
+      .success-card__body {
+        min-height: 170px;
+
+        padding: 14px 18px 18px;
+
+        text-align: right;
+      }
+
+      .success-card__title {
+        margin: 0 0 12px;
+
+        font-size: 21px;
+        line-height: 1.5;
+
+        font-weight: 800;
+      }
+
+      .success-card__list {
+        margin: 0;
+        padding: 0;
+
+        list-style: none;
+
+        font-size: 14px;
+        line-height: 1.9;
+
+        color: #333;
+      }
+
+      .success-card__list li {
+        position: relative;
+
+        padding-right: 12px;
+      }
+
+      .success-card__list li::before {
+        content: '•';
+
+        position: absolute;
+
+        right: 0;
+        top: 0;
+
+        color: #555;
+      }
+
+      .success-card__list strong {
+        font-weight: 700;
+      }
+
+      /* ========================================
+         ALL NON ACTIVE SLIDES
+      ======================================== */
+
+      /*
+        نکته مهم:
+
+        اینجا فقط swiper-slide-active است
+        که Blur ندارد.
+
+        دیگر visual-active نداریم.
+      */
+
+      .success-slider .swiper-slide:not(.swiper-slide-active) .success-card {
+        filter: blur(3px);
+        opacity: 0.45;
+      }
+
+      /* ========================================
+         REAL ACTIVE SLIDE
+      ======================================== */
+
+      .success-slider .swiper-slide-active {
+        z-index: 50;
+      }
+
+      .success-slider .swiper-slide-active .success-card {
+        filter: blur(0);
+        opacity: 1;
+
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+      }
+
+      /* =========================
+   NAVIGATION
+========================= */
+
+      .success-slider__navigation {
+        position: absolute;
+
+        left: 20px;
+        bottom: 0;
+
+        z-index: 30;
+
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .success-slider__button {
+        width: 46px;
+        height: 46px;
+
+        border: 0;
+        border-radius: 50%;
+
+        background: #f1f4fa;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        cursor: pointer;
+
+        font-size: 20px;
+
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .success-slider__button:hover {
+        background: #e5ebf6;
+        transform: scale(1.05);
+      }
+
+      /* =========================
+   PAGINATION
+========================= */
+
+      .success-slider .swiper-pagination {
+        position: absolute;
+
+        bottom: 12px;
+
+        left: 50%;
+        transform: translateX(-50%);
+
+        width: auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        gap: 9px;
+
+        z-index: 25;
+      }
+
+      .success-slider .swiper-pagination-bullet {
+        width: 9px;
+        height: 9px;
+
+        margin: 0 !important;
+
+        opacity: 1;
+
+        background: transparent;
+
+        border: 2px solid #bbb;
+
+        transition:
+          width 0.3s ease,
+          background 0.3s ease,
+          border-color 0.3s ease;
+      }
+
+      .success-slider .swiper-pagination-bullet-active {
+        width: 20px;
+
+        border-radius: 999px;
+
+        background: #333;
+        border-color: #333;
+      }
+
+      /* =========================
+   MOBILE NAVIGATION
+========================= */
+
+      @media (max-width: 767px) {
+        .success-slider {
+          position: relative;
+        }
+
+        .success-slider__navigation {
+          position: absolute;
+
+          left: 0;
+          right: 0;
+          bottom: 0;
+
+          width: 100%;
+          height: 46px;
+
+          display: block;
+
+          z-index: 30;
+        }
+
+        /* دکمه قبلی → سمت راست */
+        .success-slider__button--prev {
+          position: absolute;
+
+          right: 20px;
+          left: auto;
+
+          top: 0;
+        }
+
+        /* دکمه بعدی → سمت چپ */
+        .success-slider__button--next {
+          position: absolute;
+
+          left: 20px;
+          right: auto;
+
+          top: 0;
+        }
+
+        /* Pagination → دقیقاً وسط */
+        .success-slider .swiper-pagination {
+          position: absolute;
+
+          left: 50%;
+          right: auto;
+
+          bottom: 19px;
+
+          transform: translateX(-50%);
+
+          width: auto;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          z-index: 35;
+        }
+      }
+      /* ========================================
+         TABLET
+      ======================================== */
+
+      @media (max-width: 1024px) {
+        .success-section {
+          padding: 50px 20px 30px;
+        }
+
+        .success-section__container {
+          flex-direction: column;
+
+          gap: 35px;
+        }
+
+        .success-section__content {
+          width: 100%;
+          flex: 0 0 auto;
+
+          padding: 0;
+
+          text-align: center;
+        }
+
+        .success-slider {
+          width: 100%;
+          flex: 0 0 auto;
+        }
+
+        .success-slider .swiper {
+          padding-bottom: 55px;
+        }
+      }
+
+      /* ========================================
+         MOBILE
+      ======================================== */
+
+      @media (max-width: 767px) {
+        .success-section {
+          padding: 35px 0 25px;
+        }
+
+        .success-section__content {
+          padding: 0 20px;
+        }
+
+        .success-section__title {
+          font-size: 30px;
+        }
+
+        .success-section__description {
+          font-size: 16px;
+        }
+
+        .success-slider .swiper {
+          padding-right: 25px;
+          padding-left: 25px;
+        }
+
+        .success-slider .swiper-slide {
+          width: 280px;
+        }
+
+        .success-card__image {
+          height: 195px;
+        }
+
+        .success-card__body {
+          min-height: 160px;
+        }
+
+        .success-slider__navigation {
+          left: 20px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <section class="success-section">
+      <div class="success-section__container">
+        <!-- ====================================
+             TEXT
+        ===================================== -->
+
+        <div class="success-section__content">
+          <span class="success-badge"> پروژه‌های موفق </span>
+
+          <h2 class="success-section__title">جدیدترین موفقیت‌های نیلگام</h2>
+
+          <p class="success-section__description">ویزاهای توریستی، جاب‌آفرها و اقامت‌های موفق</p>
+        </div>
+
+        <!-- ====================================
+             SLIDER
+        ===================================== -->
+
+        <div class="success-slider">
+          <div class="swiper successSwiper">
+            <div class="swiper-wrapper">
+              <!-- Slide 1 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2026/09/حسام.webp"
+                      alt="ویزای توریستی ژاپن"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای توریستی ژاپن</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ صدور:</strong>
+                        1405/06/12
+                      </li>
+
+                      <li>
+                        <strong>نوع ویزا:</strong>
+                        توریستی / بازدیدکننده موقت
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        آقای حسام
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        37 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 2 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/07/عباس.webp"
+                      alt="ویزای توریستی اسپانیا"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای توریستی اسپانیا</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ صدور:</strong>
+                        1405/06/08
+                      </li>
+
+                      <li>
+                        <strong>نوع ویزا:</strong>
+                        پزشکی درمانی فرزند
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        آقای عباس
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        40 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 3 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/04/ستاره.webp"
+                      alt="تمدید پاسپورت آمریکا"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">تمدید پاسپورت آمریکا</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ صدور:</strong>
+                        1405/05/14
+                      </li>
+
+                      <li>
+                        <strong>نوع پاسپورت:</strong>
+                        P عادی
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        خانم ستاره
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        42 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 4 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/12/پارمیدا.webp"
+                      alt="تمدید پاسپورت کانادا"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">تمدید پاسپورت کانادا</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ صدور:</strong>
+                        1405/05/01
+                      </li>
+
+                      <li>
+                        <strong>نوع پاسپورت:</strong>
+                        PP عادی
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        خانم پادمیرا
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        16 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/11/سمیرا.webp"
+                      alt="ویزای توریستی چین"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای توریستی چین</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ شروع:</strong>
+                        1405/05/21
+                      </li>
+
+                      <li>
+                        <strong>نوع ویزا:</strong>
+                        M (ویزای تجاری)
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        خانم سمیرا
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        42 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 6 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/04/شیدا.webp"
+                      alt="ویزای توریستی کانادا"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای توریستی کانادا</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ اخذ:</strong>
+                        1405/05/03
+                      </li>
+
+                      <li>
+                        <strong>مدت ویزا:</strong>
+                        ۳ سال و ۶ ماه
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        خانم شیدا
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        51 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 7 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/06/شیرین.webp"
+                      alt="ویزای دیجیتال نومد اسپانیا"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای دیجیتال نومد اسپانیا</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ انگشت نگاری:</strong>
+                        1405/05/07
+                      </li>
+
+                      <li>
+                        <strong>تاریخ انقضا:</strong>
+                        1407/10/29
+                      </li>
+
+                      <li>
+                        <strong>تاریخ دریافت کارت:</strong>
+                        1405/05/20
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        40 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 8 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/11/تیمور.webp"
+                      alt="ویزای توریستی چین"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای توریستی چین</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ شروع:</strong>
+                        1405/05/04
+                      </li>
+
+                      <li>
+                        <strong>مدت ویزا:</strong>
+                        ۳ ماه
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        آقای تیمور
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        54 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+
+              <!-- Slide 9 -->
+              <div class="swiper-slide">
+                <article class="success-card">
+                  <div class="success-card__image">
+                    <img
+                      src="https://nilgam.com/wp-content/uploads/2025/10/امین.webp"
+                      alt="ویزای شینگن فرانسه"
+                    />
+                  </div>
+
+                  <div class="success-card__body">
+                    <h3 class="success-card__title">ویزای شینگن فرانسه</h3>
+
+                    <ul class="success-card__list">
+                      <li>
+                        <strong>تاریخ اخذ:</strong>
+                        1405/04/25
+                      </li>
+
+                      <li>
+                        <strong>نوع ویزا:</strong>
+                        سینگل تایپ C
+                      </li>
+
+                      <li>
+                        <strong>نام متقاضی:</strong>
+                        آقای امین
+                      </li>
+
+                      <li>
+                        <strong>سن:</strong>
+                        18 سال
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div class="swiper-pagination"></div>
+          </div>
+
+          <!-- Navigation -->
+
+          <div class="success-slider__navigation">
+            <button
+              type="button"
+              class="success-slider__button success-slider__button--prev"
+              aria-label="اسلاید قبلی"
+            >
+              →
+            </button>
+
+            <button
+              type="button"
+              class="success-slider__button success-slider__button--next"
+              aria-label="اسلاید بعدی"
+            >
+              ←
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <script>
+      const successSwiper = new Swiper('.successSwiper', {
+        direction: 'horizontal',
+
+        /*
+          Active واقعی Coverflow وسط قرار می‌گیرد.
+        */
+        slidesPerView: 3.2,
+        spaceBetween: 30,
+
+        centeredSlides: true,
+
+        loop: true,
+
+        effect: 'coverflow',
+
+        coverflowEffect: {
+          rotate: 0,
+          stretch: -25,
+          depth: 180,
+          modifier: 1.2,
+          scale: 0.9,
+          slideShadows: false,
+        },
+
+        speed: 700,
+
+        autoplay: {
+          delay: 4000,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: true,
+        },
+
+        pagination: {
+          el: '.success-slider .swiper-pagination',
+          clickable: true,
+        },
+
+        navigation: {
+          prevEl: '.success-slider__button--prev',
+          nextEl: '.success-slider__button--next',
+        },
+
+        breakpoints: {
+          0: {
+            slidesPerView: 1.15,
+            spaceBetween: 15,
+            centeredSlides: true,
+          },
+
+          768: {
+            slidesPerView: 2.2,
+            spaceBetween: 20,
+            centeredSlides: true,
+          },
+
+          1025: {
+            slidesPerView: 3.2,
+            spaceBetween: 30,
+            centeredSlides: true,
+          },
+        },
+      })
+    </script>
+  </body>
+</html>
